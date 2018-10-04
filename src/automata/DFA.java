@@ -7,12 +7,19 @@ public class DFA {
 	private DTransition transition;
 	private Alphabet alphabet;
 	private State iniState;
-	private Set<State> accStates;
+	private HashSet<State> accStates;
 	
-	public DFA() {}
+	public DFA() {
+		
+		states = new HashSet<State>();
+		transition = new DTransition();
+		alphabet = new Alphabet();
+		iniState = new State();
+		accStates = new HashSet<State>();
+	}
 	
 	//The standard constructor
-	public DFA(Alphabet al, HashSet<State> sts, DTransition tran, State ini, Set<State> accs) {
+	public DFA(Alphabet al, HashSet<State> sts, DTransition tran, State ini, HashSet<State> accs) {
 		
 		states = sts;
 		alphabet = al;
@@ -56,6 +63,125 @@ public class DFA {
 		return result;
 	}
 	
+	@SuppressWarnings("unchecked")
+	public HashSet<State> getReachableStates(){
+		
+		HashMap<State,Boolean> visited = new HashMap<State,Boolean>();
+		for(State s: states) {
+			visited.put(s, false);
+		}
+		
+		HashSet<State> reachable = new HashSet<State>();
+		Queue<State> visiting = new LinkedList<State>();
+		visiting.add(iniState);
+		
+		while(!visiting.isEmpty()) {
+			State head = visiting.remove();
+			visited.replace(head, true);
+			reachable.add(head);
+			for (Pair<State,String> neighbour: transition.getNextStates(head)) {
+				if(!visited.get(neighbour.getFst())) {
+					visiting.add(neighbour.getFst());
+				}
+			}
+		}
+
+		
+		return (HashSet<State>)reachable.clone();
+	}
+	
+	@SuppressWarnings("unchecked")
+	public HashSet<State> getUnreachableStates(){
+		
+		HashSet<State> unreachable = new HashSet<State>();
+		HashSet<State> reachable = getReachableStates();
+		for(State s: states) {
+			if (!reachable.contains(s)) {
+				unreachable.add(s);
+			}
+		}
+		return (HashSet<State>)unreachable.clone();
+	}
+	
+	//partition the states into distinguishable state sets
+	public HashMap<Pair<State,State>,Boolean> dPartition(){
+		
+		HashMap<Pair<State,State>,Boolean> table = new HashMap<Pair<State,State>,Boolean>();
+		for (State s1: states) {
+			for (State s2: states) {
+				if (!s1.equals(s2)) {
+					if ((accStates.contains(s1)&&!accStates.contains(s2)) || (!accStates.contains(s1)&&accStates.contains(s2))) {//break the symmetry
+						table.put(new Pair<State,State>(s1,s2),true);
+					} else {
+						table.put(new Pair<State,State>(s1,s2),false);
+					}
+				}
+			}
+		}
+		
+		boolean flag = true;
+		//Not the best one, but it is good for now
+		//Using Myphill-Nerode Theorem
+		while(flag) {
+			flag = false;
+			for (Pair<State,State> currentPair: table.keySet()) {
+				if (!table.get(currentPair)) {//current pair is not marked yet
+					for (String a: alphabet.getAlphabet()) {//look for the next states to see whether they were already marked
+						Pair<State,State> nextPair =  new Pair<State,State>(transition.getNextState(currentPair.getFst(), a),transition.getNextState(currentPair.getSnd(), a));
+						if (table.containsKey(nextPair) && table.get(nextPair)) {//if so then mark the current pair
+							table.replace(currentPair, true);
+							flag = true;
+						}
+					}
+				}
+			}
+		}
+		
+		
+		System.out.println(table.size());
+		
+		for (Pair<State,State> p : table.keySet()) {
+			System.out.println(p + ": " + table.get(p));
+		}
+		
+		return table;
+	}
+	
+	public DFA getMinimalDFA() {
+		
+		DFA temp = getCompleteDFA();
+		for (State s: getUnreachableStates()) {
+			temp.transition.removeState(s);
+			temp.accStates.remove(s);
+			temp.states.remove(s);
+		}
+		
+		System.out.println("After \n" + temp);
+
+		HashMap<Pair<State,State>,Boolean> table = temp.dPartition();
+		
+		for (Pair<State,State> p: table.keySet()) {
+			if (!table.get(p)) {//redundant
+				if (temp.states.contains(p.getFst())) {
+					if (temp.states.contains(p.getSnd())) {
+						System.out.println("Remove: " + p.getFst());
+						temp.transition.removeState(p.getFst());
+						temp.accStates.remove(p.getFst());
+						temp.states.remove(p.getFst());
+					}
+				}
+			}
+		}
+		
+		return temp;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public DFA clone() {
+		
+		return new DFA(alphabet.clone(),(HashSet<State>)(states.clone()),transition.clone(),iniState.clone(),(HashSet<State>)accStates.clone());
+	}
+	
 	public boolean runWord(String[] word, int start, State current, ArrayList<State> visited) {
 		
 		if(start < 0) return false;
@@ -78,15 +204,7 @@ public class DFA {
 		return false;
 		
 	}
-	
-	//Add extra transitions to make the automaton complete
-	// where deadState is the name for the dead-end state
-	public DFA getCompleteDFA(String deadState) {
 		
-		
-		return null;
-	}
-	
 	public boolean runWord(String[] word, ArrayList<State> visited) {
 		
 		return runWord(word,0,iniState, visited);
@@ -96,6 +214,50 @@ public class DFA {
 		
 		return runWord(word, new ArrayList<State>());
 	}
+	
+	//Add extra transitions to make the automaton complete
+	// where deadState is the name for the dead-end state
+	public DFA getCompleteDFA(State deadState) {
+		
+		DFA temp = clone();
+		
+		boolean flag = false;
+		for (State s: temp.states) {
+			for (String a: temp.alphabet.getAlphabet()) {
+				if (temp.transition.getNextState(s,a) == null) {
+					temp.transition.addEntry(s, a, deadState);
+					flag = true;
+				}
+			}
+		}
+		if(flag) {
+			temp.states.add(deadState);
+			for(String a: temp.alphabet.getAlphabet()) {
+				temp.transition.addEntry(deadState, a, deadState);	
+			}
+		}
+		
+		return temp;
+	}
+	
+	public DFA getCompleteDFA() {
+		
+		return getCompleteDFA(new State("DEAD"));
+	}
+	
+	public DFA getComplement() {
+		
+		DFA temp = getCompleteDFA();
+		HashSet<State> newaccStates = new HashSet<State>();
+		for (State s: temp.states) {
+			if (!temp.accStates.contains(s)) {
+				newaccStates.add(s);
+			}
+		}
+		temp.accStates = newaccStates;
+		return temp;
+	}
+
 	
 	public Set<State> getAllStates(){
 		return states;
@@ -161,35 +323,23 @@ public class DFA {
 		return getAcceptedWord().equals("");
 	}
 	
-	public static void main(String[] args) {
-		DFA dfa = new DFA(new String[] {"a","b"},new String[] {"q1","q2","q3"}, new String[] {"q1 a q2","q3 b q3","q2 a q1", "q2 b q3", "q1 b q3"}, new String("q1"), new String[] {"q3"});
+	public static void main(String[] args) throws CloneNotSupportedException {
+		DFA dfa = new DFA(new String[] {"0","1"},new String[] {"q0","q1","q2","q3","q4","q5"}, new String[] {"q0 0 q3","q0 1 q1","q1 0 q2","q1 1 q5","q2 0 q2","q2 1 q5","q3 0 q0","q3 1 q4","q4 0 q2","q4 1 q5","q5 0 q5","q5 1 q5"}, new String("q0"), new String[] {"q1","q2","q4"});
+		System.out.println(dfa + "\n");
+		System.out.println(dfa.getComplement() + "\n");
 		System.out.println(dfa);
-		System.out.println("aa\naaaa");
-		String[] word = {"a","b","b","b"};
-		ArrayList<State> visit = new ArrayList<State>();
-		System.out.println(dfa.runWord(word,visit));
-		for(int i=0;i<visit.size();i++){
-		    System.out.println(visit.get(i));
-		} 
-		System.out.println("End here");
-		Set<State> check = dfa.getAllStates();
-		for (State temp: check) {
-			System.out.println(temp);
-		}
+		dfa.dPartition();
+		System.out.println("MIN: ");
+		System.out.println(dfa.getMinimalDFA());
 		
-		HashSet<String> test = new HashSet<String>();
-		test.add("a");
-		test.add("b");
-		test.add("c");
-		@SuppressWarnings("unchecked")
-		HashSet<String> test2 = (HashSet<String>)test.clone();
-		for(String temp:test2) {
-			test.remove(temp);
-			System.out.println(temp);
+		HashSet<State> a = new HashSet<State>();
+		HashSet<State> b = new HashSet<State>();
+		a.add(new State("a"));
+		b.add(new State("a"));
+		System.out.println(a.equals(b));
+		a.remove("b");
+		for(State s: a) {
+			System.out.println(s + " ");
 		}
-		
-		System.out.println(test.size());
-		System.out.println(dfa.getAcceptedWord());
-		System.out.println(dfa.isEmpty());
 	}
 }

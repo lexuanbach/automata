@@ -10,6 +10,13 @@ public class DTransition {
 		tranMap = new Hashtable<String,State>();
 	}
 	
+	public DTransition clone() {
+		
+		DTransition newTran = new DTransition();
+		newTran.addEntries(getAllEntries());
+		return newTran;
+	}
+	
 	public DTransition(String[] trans) {
 		tranMap = new Hashtable<String,State>();
 		addEntries(trans);

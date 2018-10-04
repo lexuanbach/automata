@@ -6,6 +6,11 @@ public class Alphabet {
 	
 	private HashSet<String> alist;
 	
+	public Alphabet() {
+		
+		alist = new HashSet<String>();
+	}
+	
 	public Alphabet(String[] list) {
 		
 		alist = new HashSet<String>();
@@ -16,7 +21,7 @@ public class Alphabet {
 	
 	public Alphabet(HashSet<String> list) {
 		
-		this.alist = list;
+		alist = list;
 	}
 	
 	public boolean contains(String letter) {
@@ -54,11 +59,17 @@ public class Alphabet {
 	}
 	
 	public String toString() {
+		
 		String result = "";
 		for(String item: alist) {
 			result = result + item + " ";
 		}
 		return result;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public Alphabet clone() {
+		return new Alphabet((HashSet<String>)alist.clone());
 	}
 
 }

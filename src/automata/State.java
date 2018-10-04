@@ -3,8 +3,10 @@ package automata;
 public class State {
 	
 	private String name;
-	//The flag is to store extra info when needed
-	private String flag;
+	
+	public State() {
+		name = "";
+	}
 	
 	public State(String name) {
 		
@@ -38,16 +40,12 @@ public class State {
 		return hashCode() - s.hashCode();
 	}
 	
-	public String getFlag() {
-		return flag;
-	}
-	
-	public void setFlag(String info) {
-		flag = info;
-	}
-	
 	public String toString() {
 		return name;
 	} 
+	
+	public State clone() {
+		return new State(name);
+	}
 
 }
