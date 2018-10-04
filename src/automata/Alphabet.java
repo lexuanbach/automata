@@ -1,47 +1,64 @@
 package automata;
 
-import java.util.ArrayList;
+import java.util.*;
 
 public class Alphabet {
 	
-	private ArrayList<String> alist;
+	private HashSet<String> alist;
 	
-	public Alphabet(ArrayList<String> list) {
+	public Alphabet(String[] list) {
 		
-		this.alist = list;
-	}
-	
-	public boolean isAlphabet(String letter) {
-		
-		for (int i=0;i<this.alist.size();i++) {
-			if (this.alist.get(i).equals(letter)) {
-				return true;
-			}
+		alist = new HashSet<String>();
+		for (String item: list) {
+			alist.add(item);
 		}
-		
-		return false;
 	}
 	
-	public ArrayList<String> getAlphabet(){
-		
-		return this.alist;
-	}
-	
-	public void setAlphabet(ArrayList<String> list) {
+	public Alphabet(HashSet<String> list) {
 		
 		this.alist = list;
+	}
+	
+	public boolean contains(String letter) {
+		
+		return alist.contains(letter);
+	}
+	
+	public HashSet<String> getAlphabet(){
+		
+		return alist;
+	}
+	
+	public void setAlphabet(HashSet<String> list) {
+		
+		alist = list;
 	}
 	
 	public void addLetter(String letter) {
 		
-		this.alist.add(letter);
+		alist.add(letter);
 	}
 	
-	public void addLetters(ArrayList<String> letters) {
+	public void addLetters(HashSet<String> letters) {
 		
-		for (int i=0;i<letters.size();i++) {
-			this.alist.add(letters.get(i));
+		for (String item: letters) {
+			alist.add(item);
 		}
+	}
+	
+	public void addLetters(String[] letters) {
+		
+		for (String item: letters) {
+			alist.add(item);
+		}
+	}
+	
+	public String toString() {
+		String result = "";
+		for(String item: alist) {
+			result = result + item + " ";
+		}
+		return result;
 	}
 
 }

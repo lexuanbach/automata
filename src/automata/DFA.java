@@ -3,17 +3,57 @@ import java.util.*;
 
 public class DFA {
 	
+	private HashSet<State> states;
 	private DTransition transition;
-	//private Alphabet alphabet;
+	private Alphabet alphabet;
 	private State iniState;
 	private Set<State> accStates;
 	
 	public DFA() {}
 	
-	public DFA(DTransition tran, State ini, Set<State> accs) {
+	//The standard constructor
+	public DFA(Alphabet al, HashSet<State> sts, DTransition tran, State ini, Set<State> accs) {
+		
+		states = sts;
+		alphabet = al;
 		transition = tran;
 		iniState  = ini;
 		accStates = accs;
+	}
+	
+	//The "raw" constructor
+	public DFA(String[] al, String[] sts, String[] trans, String ini, String[] accs) {
+		
+		alphabet = new Alphabet(al);
+		states = new HashSet<State>();
+		for(String item: sts) {
+			states.add(new State(item));
+		}
+		transition = new DTransition(trans);
+		iniState = new State(ini);
+		accStates = new HashSet<State>();
+		for(String item: accs) {
+			accStates.add(new State(item));
+		}
+	}
+	
+	public String toString() {
+		
+		String result;
+		result = "Alphabet: " + alphabet + "\n";
+		result = result + "States: ";
+		for(State s: states) {
+			result = result + s + " ";
+		}
+		result = result + "\n";
+		result = result + "Transitions: " + transition + "\n";
+		result = result + "Initial state: " + iniState + "\n";
+		result = result + "Accepting states: ";
+		for(State s: accStates) {
+			result = result + s + " ";
+		}
+		
+		return result;
 	}
 	
 	public boolean runWord(String[] word, int start, State current, ArrayList<State> visited) {
@@ -39,15 +79,30 @@ public class DFA {
 		
 	}
 	
+	//Add extra transitions to make the automaton complete
+	// where deadState is the name for the dead-end state
+	public DFA getCompleteDFA(String deadState) {
+		
+		
+		return null;
+	}
+	
 	public boolean runWord(String[] word, ArrayList<State> visited) {
+		
 		return runWord(word,0,iniState, visited);
 	}
 	
 	public boolean runWord(String[] word) {
+		
 		return runWord(word, new ArrayList<State>());
 	}
 	
 	public Set<State> getAllStates(){
+		return states;
+	}
+	
+	//Extract only states that appear in the transition function
+	public Set<State> getAllStatesFromTrans(){
 		
 		Set<State> stateList = new HashSet<State>();
 		String[] entries = transition.getAllEntries();
@@ -86,11 +141,8 @@ public class DFA {
 		while(!visiting.isEmpty()) {
 			State head = visiting.remove();
 
-			//System.out.println("Visiting " + head);
-			//visited.replace(head, " ");
-
 				for (Pair<State,String> neighbour: transition.getNextStates(head)) {
-					//System.out.println(neighbour);
+
 					if (accStates.contains(neighbour.getFst())) {
 						return visited.get(head) + neighbour.getSnd();
 					} else {
@@ -110,12 +162,9 @@ public class DFA {
 	}
 	
 	public static void main(String[] args) {
-		DTransition tran = new DTransition();
-		tran.addEntries(new String[] {"q1 a q2","q3 b q3","q2 a q1", "q2 b q3", "q1 b q3"});
-		Set<State> accs = new HashSet<State>();
-		accs.add(new State("q4"));
-		State ini = new State("q5");
-		DFA dfa = new DFA(tran,ini,accs);
+		DFA dfa = new DFA(new String[] {"a","b"},new String[] {"q1","q2","q3"}, new String[] {"q1 a q2","q3 b q3","q2 a q1", "q2 b q3", "q1 b q3"}, new String("q1"), new String[] {"q3"});
+		System.out.println(dfa);
+		System.out.println("aa\naaaa");
 		String[] word = {"a","b","b","b"};
 		ArrayList<State> visit = new ArrayList<State>();
 		System.out.println(dfa.runWord(word,visit));
@@ -132,7 +181,8 @@ public class DFA {
 		test.add("a");
 		test.add("b");
 		test.add("c");
-		HashSet<String> test2 = (HashSet)test.clone();
+		@SuppressWarnings("unchecked")
+		HashSet<String> test2 = (HashSet<String>)test.clone();
 		for(String temp:test2) {
 			test.remove(temp);
 			System.out.println(temp);

@@ -10,6 +10,11 @@ public class DTransition {
 		tranMap = new Hashtable<String,State>();
 	}
 	
+	public DTransition(String[] trans) {
+		tranMap = new Hashtable<String,State>();
+		addEntries(trans);
+	}
+	
 	public void addEntry(State src, String a, State dest) {
 		
 		Pair<State,String> p = new Pair<State,String>(src,a);
@@ -27,13 +32,8 @@ public class DTransition {
 			String element = entryList[i];
 
 			if (Pattern.matches("[\\w]+\\s[\\w(,)]+\\s[\\w]+", element)) {
-				
-				String src = element.substring(0,element.indexOf(" "));
-				element = element.substring(element.indexOf(" ")+1);
-				String dest = element.substring(element.lastIndexOf(" ")+1);
-				String a = element.substring(0,element.lastIndexOf(" "));
-				
-				addEntry(src,a,dest);
+				LabeledEdge edge = new LabeledEdge(element);
+				addEntry(edge.getSrc(),edge.getLabel(),edge.getDest());
 			}
 		}
 	}
@@ -72,16 +72,28 @@ public class DTransition {
 		removeEntry(new State(s), a);
 	}
 	
+	public HashSet<LabeledEdge> getAllEdges(){
+		
+		HashSet<LabeledEdge> edges = new HashSet<LabeledEdge>();
+		
+		for (Map.Entry<String, State> entry: tranMap.entrySet()) {
+			String key = entry.getKey();
+			State dest = entry.getValue();
+			Pair<String,String> pair = Utility.parsePair(key);
+			edges.add(new LabeledEdge(new State(pair.getFst()),pair.getSnd(),dest));
+		}
+		
+		return edges;
+	}
+	
 	public String[] getAllEntries() {
 		
-		String[] entries = new String[tranMap.size()];
+		HashSet<LabeledEdge> edges = getAllEdges();
+		String[] entries = new String[edges.size()];
 		int i = 0;
-		for ( Map.Entry<String, State> entry : tranMap.entrySet()) {
-		    String key = entry.getKey();
-		    State dest = entry.getValue();
-		    Pair<String,String> pair = Utility.parsePair(key);
-		    entries[i++] =  pair.getFst() + " " + pair.getSnd() + " " + dest;
-
+		
+		for (LabeledEdge item: edges) {
+			entries[i++] = item.toString();
 		}
 		
 		return entries;
@@ -110,14 +122,4 @@ public class DTransition {
 	public void removeState(String s) {
 		removeState(new State(s));
 	}
-
-	public static void main(String[] args) {
-		DTransition tran = new DTransition();
-		tran.addEntries(new String[]{"q1 a q2","q2 b q2","q1 b q1"});
-		System.out.println(tran);
-		tran.removeState("q1");
-		System.out.println(tran);
-	}
-
-	
 }

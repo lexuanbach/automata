@@ -12,7 +12,7 @@ public class LabeledEdge {
 	public LabeledEdge(State s1, String s, State s2) {
 		src = s1;
 		label = s;
-		s2 = dest;
+		dest = s2;
 	}
 	
 	public LabeledEdge(String s1, String s, String s2) {
