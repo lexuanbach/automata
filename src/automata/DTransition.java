@@ -79,6 +79,14 @@ public class DTransition {
 		removeEntry(new State(s), a);
 	}
 	
+	public void removeEdge(LabeledEdge edge) {
+		removeEntry(edge.getSrc(),edge.getLabel());
+	}
+	
+	public void addEdge(LabeledEdge edge) {
+		addEntry(edge.getSrc(),edge.getLabel(),edge.getDest());
+	}
+	
 	public HashSet<LabeledEdge> getAllEdges(){
 		
 		HashSet<LabeledEdge> edges = new HashSet<LabeledEdge>();
@@ -114,8 +122,15 @@ public class DTransition {
 	
 	@SuppressWarnings("unchecked")
 	public void removeState(State s) {
+		
+		HashSet<LabeledEdge> edges = getAllEdges();
+		for(LabeledEdge edge: edges) {
+			if (edge.getSrc().equals(s) || edge.getDest().equals(s)) {
+				removeEntry(edge.getSrc(),edge.getLabel());
+			}
+		}
 		//Need to clone it to avoid concurrent modification bug
-
+/*
 		for ( Map.Entry<String, State> entry : 
 			((Hashtable<String, State>) tranMap.clone()).entrySet()) {
 			String key = entry.getKey();
@@ -124,6 +139,7 @@ public class DTransition {
 				tranMap.remove(key);
 			}
 		}
+		*/
 	}
 	//Shortcut
 	public void removeState(String s) {

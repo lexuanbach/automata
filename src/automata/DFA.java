@@ -137,13 +137,6 @@ public class DFA {
 			}
 		}
 		
-		
-		System.out.println(table.size());
-		
-		for (Pair<State,State> p : table.keySet()) {
-			System.out.println(p + ": " + table.get(p));
-		}
-		
 		return table;
 	}
 	
@@ -155,19 +148,34 @@ public class DFA {
 			temp.accStates.remove(s);
 			temp.states.remove(s);
 		}
-		
-		System.out.println("After \n" + temp);
 
 		HashMap<Pair<State,State>,Boolean> table = temp.dPartition();
 		
-		for (Pair<State,State> p: table.keySet()) {
-			if (!table.get(p)) {//redundant
-				if (temp.states.contains(p.getFst())) {
-					if (temp.states.contains(p.getSnd())) {
-						System.out.println("Remove: " + p.getFst());
-						temp.transition.removeState(p.getFst());
-						temp.accStates.remove(p.getFst());
-						temp.states.remove(p.getFst());
+		for (Pair<State,State> pair: table.keySet()) {
+			if (!table.get(pair)) {//redundant
+				if (temp.states.contains(pair.getFst())) {
+					if (temp.states.contains(pair.getSnd())) {//remove the first state
+						
+						for (LabeledEdge edge: temp.transition.getAllEdges()) {
+							temp.transition.removeEdge(edge);
+							//We need to rename accordingly
+							State newSrc = edge.getSrc();
+							State newDest = edge.getDest();
+							if (newSrc.equals(pair.getFst())) {
+								newSrc = pair.getSnd();
+							}
+							if (newDest.equals(pair.getFst())) {
+								newDest = pair.getSnd();
+							}
+							temp.transition.addEdge(new LabeledEdge(newSrc,edge.getLabel(),newDest));
+						}
+						temp.accStates.remove(pair.getFst());
+						temp.states.remove(pair.getFst());
+						if(pair.getFst().equals(temp.iniState)) {
+							//if the removed state is the initial state
+							//then we need to replace it with the second state
+							temp.iniState = pair.getSnd();
+						}
 					}
 				}
 			}
@@ -326,20 +334,8 @@ public class DFA {
 	public static void main(String[] args) throws CloneNotSupportedException {
 		DFA dfa = new DFA(new String[] {"0","1"},new String[] {"q0","q1","q2","q3","q4","q5"}, new String[] {"q0 0 q3","q0 1 q1","q1 0 q2","q1 1 q5","q2 0 q2","q2 1 q5","q3 0 q0","q3 1 q4","q4 0 q2","q4 1 q5","q5 0 q5","q5 1 q5"}, new String("q0"), new String[] {"q1","q2","q4"});
 		System.out.println(dfa + "\n");
-		System.out.println(dfa.getComplement() + "\n");
-		System.out.println(dfa);
 		dfa.dPartition();
 		System.out.println("MIN: ");
 		System.out.println(dfa.getMinimalDFA());
-		
-		HashSet<State> a = new HashSet<State>();
-		HashSet<State> b = new HashSet<State>();
-		a.add(new State("a"));
-		b.add(new State("a"));
-		System.out.println(a.equals(b));
-		a.remove("b");
-		for(State s: a) {
-			System.out.println(s + " ");
-		}
 	}
 }
