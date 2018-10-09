@@ -4,10 +4,10 @@ import java.util.regex.Pattern;
 
 public class DTransition {
 	
-	private Hashtable<String,State> tranMap;
+	private Hashtable<Pair<State,String>,State> tranMap;
 	
 	public DTransition() {
-		tranMap = new Hashtable<String,State>();
+		tranMap = new Hashtable<Pair<State,String>,State>();
 	}
 	
 	public DTransition clone() {
@@ -18,14 +18,13 @@ public class DTransition {
 	}
 	
 	public DTransition(String[] trans) {
-		tranMap = new Hashtable<String,State>();
+		tranMap = new Hashtable<Pair<State,String>,State>();
 		addEntries(trans);
 	}
 	
 	public void addEntry(State src, String a, State dest) {
 		
-		Pair<State,String> p = new Pair<State,String>(src,a);
-		tranMap.put(p.toString(), dest);
+		tranMap.put(new Pair<State,String>(src,a), new State(dest));
 	}
 	//Shortcut
 	public void addEntry(String src, String a, String dest) {
@@ -60,8 +59,7 @@ public class DTransition {
 	
 	public State getNextState(State s, String a) {
 		
-		Pair<State,String> p = new Pair<State,String>(s,a);
-		return tranMap.get(p.toString());
+		return tranMap.get(new Pair<State,String>(s,a));
 	}
 	//Shortcut
 	public State getNextState(String s, String a) {
@@ -71,8 +69,7 @@ public class DTransition {
 	
 	public void removeEntry(State s, String a) {
 		
-		Pair<State,String> p = new Pair<State,String>(s,a);
-		tranMap.remove(p.toString());
+		tranMap.remove(new Pair<State,String>(s,a));
 	}
 	//Shortcut
 	public void removeEntry(String s, String a) {
@@ -91,11 +88,10 @@ public class DTransition {
 		
 		HashSet<LabeledEdge> edges = new HashSet<LabeledEdge>();
 		
-		for (Map.Entry<String, State> entry: tranMap.entrySet()) {
-			String key = entry.getKey();
+		for (Map.Entry<Pair<State,String>, State> entry: tranMap.entrySet()) {
+			Pair<State,String> key = entry.getKey();
 			State dest = entry.getValue();
-			Pair<String,String> pair = Utility.parsePair(key);
-			edges.add(new LabeledEdge(new State(pair.getFst()),pair.getSnd(),dest));
+			edges.add(new LabeledEdge(new State(key.getFst()),key.getSnd(),dest));
 		}
 		
 		return edges;
@@ -120,7 +116,6 @@ public class DTransition {
 		return Arrays.toString(getAllEntries());
 	}
 	
-	@SuppressWarnings("unchecked")
 	public void removeState(State s) {
 		
 		HashSet<LabeledEdge> edges = getAllEdges();
@@ -129,17 +124,6 @@ public class DTransition {
 				removeEntry(edge.getSrc(),edge.getLabel());
 			}
 		}
-		//Need to clone it to avoid concurrent modification bug
-/*
-		for ( Map.Entry<String, State> entry : 
-			((Hashtable<String, State>) tranMap.clone()).entrySet()) {
-			String key = entry.getKey();
-			Pair<String,String> pair = Utility.parsePair(key);
-			if (pair.getFst().equals(s.getName())) {
-				tranMap.remove(key);
-			}
-		}
-		*/
 	}
 	//Shortcut
 	public void removeState(String s) {

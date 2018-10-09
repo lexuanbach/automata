@@ -19,13 +19,14 @@ public class DFA {
 	}
 	
 	//The standard constructor
+	@SuppressWarnings("unchecked")
 	public DFA(Alphabet al, HashSet<State> sts, DTransition tran, State ini, HashSet<State> accs) {
 		
-		states = sts;
-		alphabet = al;
-		transition = tran;
-		iniState  = ini;
-		accStates = accs;
+		states = (HashSet<State>) sts.clone();
+		alphabet = al.clone();
+		transition = tran.clone();
+		iniState  = ini.clone();
+		accStates = (HashSet<State>) accs.clone();
 	}
 	
 	//The "raw" constructor

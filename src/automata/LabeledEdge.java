@@ -10,9 +10,9 @@ public class LabeledEdge {
 	private State dest;
 	
 	public LabeledEdge(State s1, String s, State s2) {
-		src = s1;
+		src = s1.clone();
 		label = s;
-		dest = s2;
+		dest = s2.clone();
 	}
 	
 	public LabeledEdge(String s1, String s, String s2) {
@@ -57,6 +57,10 @@ public class LabeledEdge {
 	
 	public int hashCode() {
 		return Objects.hash(src,label,dest);
+	}
+	
+	public LabeledEdge clone() {
+		return new LabeledEdge(src,label,dest);
 	}
 
 }
