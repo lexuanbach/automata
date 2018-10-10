@@ -1,7 +1,6 @@
 package automata;
 
-import java.util.Objects;
-import java.util.regex.Pattern;
+import java.util.*;
 
 public class LabeledEdge {
 	
@@ -10,43 +9,57 @@ public class LabeledEdge {
 	private State dest;
 	
 	public LabeledEdge(State s1, String s, State s2) {
+		
 		src = s1.clone();
 		label = s;
 		dest = s2.clone();
 	}
 	
 	public LabeledEdge(String s1, String s, String s2) {
+		
 		this(new State(s1), s, new State(s2));
 	}
 	
-	public LabeledEdge(String arrow) {
-		if (Pattern.matches("\\w+\\s\\w+\\s\\w+", arrow)) {
-			String[] elements = arrow.split("\\s");
+	public LabeledEdge(String input) {
+		
+		String[] elements = input.split("\\s");
+		if(elements.length == 3) {
 			src = new State(elements[0]);
 			label = elements[1];
 			dest = new State(elements[2]);
 		} else {
-			System.out.println("Error");
+			System.out.println("Error!");
 		}
+			
+	}
+	
+	public boolean isEpsilonEdge() {
+		
+		return getLabel().equals("");
 	}
 	
 	public State getSrc() {
+		
 		return src;
 	}
 	
 	public State getDest() {
+		
 		return dest;
 	}
 	
 	public String getLabel() {
+		
 		return label;
 	}
 	
 	public String toString() {
+		
 		return src + " " + label + " " + dest;
 	}
 	
 	public boolean equals(Object o) {
+		
 		if (!(o instanceof LabeledEdge)) {
 			return false;
 		}
@@ -56,10 +69,12 @@ public class LabeledEdge {
 	}
 	
 	public int hashCode() {
+		
 		return Objects.hash(src,label,dest);
 	}
 	
 	public LabeledEdge clone() {
+		
 		return new LabeledEdge(src,label,dest);
 	}
 

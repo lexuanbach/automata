@@ -64,6 +64,34 @@ public class DFA {
 		return result;
 	}
 	
+	public DFA rename(HashMap<State,State> mapping) {
+		
+		DFA dfa = new DFA();
+		dfa.alphabet = alphabet.clone();
+		for (State s: states) {
+			dfa.states.add(mapping.get(s).clone());
+		}
+		for (LabeledEdge edge: transition.getAllEdges()) {
+			LabeledEdge newEdge = new LabeledEdge(mapping.get(edge.getSrc()),edge.getLabel(),mapping.get(edge.getDest()));
+			dfa.transition.addEdge(newEdge);
+		}
+		dfa.iniState = mapping.get(iniState).clone();
+		for (State s: accStates) {
+			dfa.accStates.add(mapping.get(s).clone());
+		}
+		return dfa;
+	}
+	
+	public DFA rename(String prefix) {
+		
+		HashMap<State,State> mapping = new HashMap<State,State>();
+		int i=1;
+		for(State s: states) {
+			mapping.put(s.clone(), new State(prefix+(i++)));
+		}
+		return rename(mapping);
+	}
+	
 	@SuppressWarnings("unchecked")
 	public HashSet<State> getReachableStates(){
 		
@@ -89,6 +117,18 @@ public class DFA {
 
 		
 		return (HashSet<State>)reachable.clone();
+	}
+	
+	public NFA getNFA() {
+		
+		NTransition nTran = new NTransition();
+		for (LabeledEdge edge: transition.getAllEdges()) {
+			nTran.addEdge(edge);
+		}
+		HashSet<State> iniStates = new HashSet<State>();
+		iniStates.add(iniState);
+		NFA nfa = new NFA(alphabet,states,nTran,iniStates,accStates);
+		return nfa;
 	}
 	
 	@SuppressWarnings("unchecked")

@@ -27,12 +27,10 @@ public class NTransition {
 		
 		for (String tran: args) {
 			String[] components = tran.trim().split("[\\s]+");
-			if (components.length >= 3) {
-				State src = new State(components[0]);
-				String label = components[1];
-				for (int i=2;i<components.length;i++) {
-					addEdge(new LabeledEdge(src,label,new State(components[i])));
-				}
+			if (components.length == 2){
+				addEdge(new LabeledEdge(components[0],"",components[1]));
+			} else if (components.length == 3){
+				addEdge(new LabeledEdge(components[0],components[1],components[2]));
 			} else {
 				try {
 					FileHandler fh = new FileHandler("logger.log", false);
@@ -67,8 +65,8 @@ public class NTransition {
 		}
 		
 		return entries;
-	}
-		
+	}	
+	
 	public NTransition clone() {
 		
 		return new NTransition(tranMap);
@@ -98,7 +96,7 @@ public class NTransition {
 	
 	public static void main(String[] args) {
 		
-		NTransition n = new NTransition(new String[] {"q1 a", "q1    b   q2  ","q1 a q2","q1 a q2","q1 a q1"});
+		NTransition n = new NTransition(new String[] {"q1 q1", "q1    b   q2  ","q1 a q2","q1 a q2","q1 a q1"});
 		System.out.println(n);
 	}
 }

@@ -46,6 +46,11 @@ public class NFA {
 		}
 	}
 	
+	public NFA(String al, String sts, String tran, String iniS, String accS) {
+		
+		this(al.trim().split("[\\s]+"),sts.trim().split("[\\s]+"),tran.trim().split("[\\s]*,[\\s]*"),iniS.trim().split("[\\s]+"),accS.trim().split("[\\s]+"));	
+	}
+	
 	public NFA clone() {
 		
 		return new NFA(alphabet,states,transition,iniStates,accStates);
@@ -72,8 +77,9 @@ public class NFA {
 	}
 	
 	public NFA rename(String prefix) {
+		
 		HashMap<State,State> mapping = new HashMap<State,State>();
-		int i=0;
+		int i=1;
 		for(State s: states) {
 			mapping.put(s.clone(), new State(prefix+(i++)));
 		}
@@ -82,8 +88,8 @@ public class NFA {
 	
 	public NFA getUnion(NFA nfa) {
 		
-		NFA unionA = nfa.rename("s");
-		NFA temp = rename("q");
+		NFA unionA = nfa.rename("u");
+		NFA temp = rename("t");
 		
 		for (String letter: temp.alphabet.getAlphabet()) {
 			unionA.alphabet.addLetter(letter);
@@ -100,7 +106,105 @@ public class NFA {
 		for (State state: temp.accStates) {
 			unionA.accStates.add(state.clone());
 		}
-		return unionA;
+		return unionA.rename("q");
+	}
+	
+	public HashMap<State,HashSet<State>> computeEClosure(){
+		
+		HashMap<State,HashSet<State>> closure = new HashMap<State,HashSet<State>>();
+		for (State s: states) {
+			closure.put(s, new HashSet<State>());
+			HashSet<State> visited = new HashSet<State>();
+			Queue<State> visiting = new LinkedList<State>();
+			visiting.add(s);
+			while(!visiting.isEmpty()) {
+				State head = visiting.remove();
+				visited.add(head);
+				for (LabeledEdge e: transition.getAllEdges()) {
+					if (e.getSrc().equals(s) && e.isEpsilonEdge() && !visited.contains(e.getDest())) {
+						visiting.add(e.getDest());
+						closure.get(s).add(e.getDest());
+					}
+				}
+			}			
+		}
+		
+		return closure;
+	}
+	
+	public NFA removeEpsilon() {
+		
+		HashMap<State,HashSet<State>> closure = computeEClosure();
+		NTransition nTran = new NTransition();
+		for(State s: states) {
+			for(LabeledEdge e: transition.getAllEdges()) {
+				if (closure.get(s).contains(e.getSrc()) && !e.isEpsilonEdge()) {
+					nTran.addEdge(new LabeledEdge(s,e.getLabel(),e.getDest()));
+				}
+			}
+		}
+		
+		NFA nfa = new NFA();
+		
+		return nfa;
+	}
+	
+	public DFA getDFA() {
+		
+		HashSet<HashSet<State>> stateSets = new HashSet<HashSet<State>>();
+		HashSet<State> iniSState = new HashSet<State>();
+		DTransition dTran = new DTransition();
+		HashSet<HashSet<State>> accSStates = new HashSet<HashSet<State>>();
+		
+		for(State s: iniStates) {
+			iniSState.add(s.clone());
+		}
+
+		Queue<HashSet<State>> visiting = new LinkedList<HashSet<State>>();
+		visiting.add(iniSState);
+		
+		while(!visiting.isEmpty()) {
+			
+			HashSet<State> head = visiting.remove();
+
+			if(!stateSets.contains(head)) {
+				stateSets.add(head);
+				HashSet<LabeledEdge> edges = transition.getAllEdges();
+				for(String a: alphabet.getAlphabet()) {
+					HashSet<State> newStateSet = new HashSet<State>();
+					boolean isAcceptingState = false;
+					for (LabeledEdge edge: edges) {
+						if(head.contains(edge.getSrc()) && edge.getLabel().equals(a)) {
+							newStateSet.add(edge.getDest());
+							if(accStates.contains(edge.getDest())) {
+								isAcceptingState = true;
+							}
+						}
+					}
+					
+					dTran.addEdge(new LabeledEdge(head.toString(),a,newStateSet.toString()));
+
+					if (!stateSets.contains(newStateSet)) {
+						visiting.add(newStateSet);
+						if (isAcceptingState) {
+							accSStates.add(newStateSet);
+						}
+					}
+				}
+			}
+		}
+		
+		HashSet<State> castingSSets = new HashSet<State>();
+		for (HashSet<State> ss: stateSets) {
+			castingSSets.add(new State(ss.toString()));
+		}
+		HashSet<State> castingAccSStates = new HashSet<State>();
+		for(HashSet<State> ss: accSStates) {
+			castingAccSStates.add(new State(ss.toString()));
+		}
+		
+		DFA dfa = new DFA(alphabet,castingSSets,dTran,new State(iniSState.toString()),castingAccSStates);
+		return dfa;
 	}
 	
 	public String toString() {
@@ -127,9 +231,9 @@ public class NFA {
 	}
 	
 	public static void main(String[] args) {
-		NFA nfa = new NFA(new String[] {"0","1"},new String[] {"q0","q1"}, new String[] {"q0 0 q0","q0 1 q0","q0 0 q1","q1 1 q1"}, new String[] {"q0"},new String[] {"q1"});
+		NFA nfa = new NFA("0 1","q1 q2 q3 q4","q1 0 q1,q1 1 q1,q1 1 q2,q2 0 q2,q2 0 q1,q2 1 q3,q3 0 q3,q3 1 q3,q4 0 q4,q4 1 q3","q1","q3 q4");
 		System.out.println(nfa);
-		System.out.println(nfa.rename("s"));
+		System.out.println(nfa.getDFA().rename("q"));
 	}
 	
 }

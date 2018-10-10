@@ -13,7 +13,9 @@ public class DTransition {
 	public DTransition clone() {
 		
 		DTransition newTran = new DTransition();
-		newTran.addEntries(getAllEntries());
+		for (LabeledEdge e: getAllEdges()) {
+			newTran.addEdge(e);
+		}
 		return newTran;
 	}
 	
