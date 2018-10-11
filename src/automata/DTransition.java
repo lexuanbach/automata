@@ -49,9 +49,7 @@ public class DTransition {
 	public Set<Pair<State,String>> getNextStates(State s) {
 		
 		Set<Pair<State,String>> stateList = new HashSet<Pair<State,String>>();
-		String[] entries = getAllEntries();
-		for (String entry:entries) {
-			LabeledEdge edge = new LabeledEdge(entry);
+		for (LabeledEdge edge: getAllEdges()) {
 			if (edge.getSrc().equals(s)) {
 				stateList.add(new Pair<State, String>(edge.getDest(),edge.getLabel()));
 			}

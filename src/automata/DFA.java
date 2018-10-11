@@ -93,7 +93,7 @@ public class DFA {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public HashSet<State> getReachableStates(){
+	public HashSet<State> getReachableStates(State source){
 		
 		HashMap<State,Boolean> visited = new HashMap<State,Boolean>();
 		for(State s: states) {
@@ -102,7 +102,7 @@ public class DFA {
 		
 		HashSet<State> reachable = new HashSet<State>();
 		Queue<State> visiting = new LinkedList<State>();
-		visiting.add(iniState);
+		visiting.add(source);
 		
 		while(!visiting.isEmpty()) {
 			State head = visiting.remove();
@@ -132,10 +132,10 @@ public class DFA {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public HashSet<State> getUnreachableStates(){
+	public HashSet<State> getUnreachableStates(State source){
 		
 		HashSet<State> unreachable = new HashSet<State>();
-		HashSet<State> reachable = getReachableStates();
+		HashSet<State> reachable = getReachableStates(source);
 		for(State s: states) {
 			if (!reachable.contains(s)) {
 				unreachable.add(s);
@@ -184,7 +184,7 @@ public class DFA {
 	public DFA getMinimalDFA() {
 		
 		DFA temp = getCompleteDFA();
-		for (State s: getUnreachableStates()) {
+		for (State s: getUnreachableStates(iniState)) {
 			temp.transition.removeState(s);
 			temp.accStates.remove(s);
 			temp.states.remove(s);
@@ -316,18 +316,15 @@ public class DFA {
 	public Set<State> getAllStatesFromTrans(){
 		
 		Set<State> stateList = new HashSet<State>();
-		String[] entries = transition.getAllEntries();
 		
-		for (String item : entries) {
-			String src = item.substring(0, item.indexOf(" "));
-			String dest = item.substring(item.lastIndexOf(" ") + 1);
-			stateList.add(new State(src));
-			stateList.add(new State(dest));
+		for (LabeledEdge e: transition.getAllEdges()) {
+			stateList.add(e.getSrc());
+			stateList.add(e.getDest());
 		}
 		//Add initial state and accepting states
 		stateList.add(iniState);
-		for (State temp: accStates) {
-			stateList.add(temp);
+		for (State s: accStates) {
+			stateList.add(s);
 		}
 		
 		return stateList;
