@@ -1,5 +1,7 @@
 package automata;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
 public class NFA {
@@ -54,6 +56,18 @@ public class NFA {
 	public NFA clone() {
 		
 		return new NFA(alphabet,states,transition,iniStates,accStates);
+	}
+	
+	public NTransition getTransition() {
+		return transition;
+	}
+	
+	public HashSet<State> getIniStates(){
+		return iniStates;
+	}
+	
+	public HashSet<State> getAccStates(){
+		return accStates;
 	}
 	
 	public NFA rename(HashMap<State,State> mapping) {
@@ -370,8 +384,45 @@ public class NFA {
 		return result;
 	}
 	
+	 
+	 public void draw(String fileName, String type) throws IOException {
+		 
+		 GraphViz gv = new GraphViz();
+	     gv.addln(gv.start_graph());
+	     
+		 gv.addln("rankdir=LR;");
+		 
+	     String finalStates = "node [shape = doublecircle]";
+	     for (State s: getAccStates()) {
+	    	 finalStates = finalStates + " \"" + s + "\"";
+	     }
+	     finalStates = finalStates + ";";
+
+	     gv.addln(finalStates);
+	     gv.addln("node [shape = none]; \"\"");
+	     gv.addln("node [shape = circle];");
+	     
+	     for (LabeledEdge e: getTransition().getAllEdges()) {
+	    	 String tran = "\"" + e.getSrc()+ "\" -> \"" + e.getDest() + "\"[label=\"" + e.getLabel() + "\"];";
+	    	 gv.addln(tran);
+	     }
+	     for (State iniState: getIniStates()) {
+	    	 gv.addln("\"\" -> " + iniState + ";");
+	     }
+
+	     gv.addln(gv.end_graph());
+	     
+	     gv.writeGraphToFile(gv.getGraph(gv.getDotSource(), type), new File(fileName + "." + type) );
+	     gv.writeDotSourceToFile(gv.getDotSource(), fileName + ".dot");
+	 }
+	 
+	 public void draw(String fileName) throws IOException {
+		 draw(fileName,"pdf");
+	 }
+	 
 	
-	public static void main(String[] args) {
+	
+	public static void main(String[] args) throws IOException {
 		NFA nfa = new NFA("0 1","q1 q2 q3 q4","q1 0 q1,q1 1 q1,q1 1 q2,q2 0 q2,q2 0 q1,q2 1 q3,q3 0 q3,q3 1 q3,q4 0 q4,q4 1 q3","q1","q3 q4");
 		System.out.println(nfa);
 		System.out.println(nfa.getDFA().rename("q"));
@@ -380,19 +431,13 @@ public class NFA {
 		System.out.println(nfa1);
 		System.out.println(nfa1.getDFA().getMinimalDFA());
 		System.out.println("+++++++++++++++++++");
-		NFA a1 = new NFA("1","q1 q2 q3","q1 1 q2,q2 1 q3,q3 1 q1","q1","q3");
-		NFA a2 = new NFA("1","s1 s2 s3 s4 s5","s1 1 s2,s2 1 s3,s3 1 s4,s4 1 s5,s5 1 s1","s1","s5");
-		NFA b1 = a1.getUnion(a2).rename("q");
-		NFA b2 = a1.getComplement().getIntersection(a2.getComplement()).getComplement().rename("k");
-		System.out.println(b1.isEquiv(b2) + " and " + b2.isEquiv(b1));
-		System.out.println(b1.isEquiv(b1));
-		System.out.println(a1.isEquiv(a2) + " and " + a2.isEquiv(a1));
-		System.out.println(b1.isEquiv(b1.getDFA().getNFA()));
-		System.out.println(b1);
-		System.out.println(b2);
-		ArrayList<HashSet<LabeledEdge>> trace = new ArrayList<HashSet<LabeledEdge>>();
-		System.out.println(a1.getIntersection(a2).getTrace(a1.getIntersection(a2).getDFA().getAcceptedWord().split(" "), trace));
-		System.out.println(Arrays.toString(trace.toArray()));
+		NFA a1 = new NFA("1","q1 q2 q3","q1 1 q2,q2 1 q3,q3 1 q1","q1","q1 q2");
+		NFA a2 = new NFA("1","s1 s2 s3 s4 s5","s1 1 s2,s2 1 s3,s3 1 s4,s4 1 s5,s5 1 s1","s1","s1 s4");
+		NFA b1 = a1.getIntersection(a2);
+		b1.getDFA().rename("q").getNFA().draw("out","pdf");
+		NFA a3 = new NFA("1","q1 q2 q3 q4 q5 q6","q1 1 q2,q2 1 q3,q3 1 q4,q4 1 q5,q5 1 q6,q6 1 q1","q1","q1 q3 q5");
+		a3.draw("a", "pdf");
+		a3.getDFA().getMinimalDFA().rename("q").draw("a3");
 	}
 	
 }

@@ -1,4 +1,5 @@
 package automata;
+import java.io.IOException;
 import java.util.*;
 
 public class DFA {
@@ -367,6 +368,14 @@ public class DFA {
 	
 	public boolean isEmpty() {
 		return getAcceptedWord().equals("");
+	}
+	
+	public void draw(String fileName, String type) throws IOException {
+		getNFA().draw(fileName, type);
+	}
+	
+	public void draw(String fileName) throws IOException {
+		getNFA().draw(fileName);
 	}
 	
 	public static void main(String[] args) throws CloneNotSupportedException {
